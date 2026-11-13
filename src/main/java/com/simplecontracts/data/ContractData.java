@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.function.BiFunction;
+import com.simpleeconomy.api.EconomyAPI;
 
 public final class ContractData extends SavedData {
     private static final String DATA_NAME = "simplecontracts_contracts";
@@ -131,6 +133,31 @@ public final class ContractData extends SavedData {
         return changed;
     }
 
+    public boolean claimReward(ServerPlayer player, int contractIndex) {
+        PlayerContracts current = players.get(player.getUUID());
+        if (current == null || contractIndex < 0 || contractIndex >= current.contracts().size()) {
+            return false;
+        }
+
+        ContractEntry contract = current.contracts().get(contractIndex);
+        if (!contract.accepted() || contract.claimed() || contract.progress() < contract.target()) {
+            return false;
+        }
+
+        // EconomyAPI stores the token alongside the balance and history update.
+        EconomyAPI.addContractReward(player, contract.reward(), contract.title(), contract.rewardToken());
+
+        List<ContractEntry> updated = new ArrayList<>(current.contracts());
+        updated.set(contractIndex, contract.withClaimed(true));
+        players.put(player.getUUID(), new PlayerContracts(current.refreshDay(), updated));
+        setDirty();
+        return true;
+    }
+
+    public boolean advanceForBlock(UUID playerId, String contractId, int amount) {
+        return advanceProgress(playerId, contractId, amount);
+    }
+
     private void ensurePlayer(UUID playerId, long refreshDay) {
         PlayerContracts current = players.get(playerId);
         if (current != null && current.refreshDay() >= refreshDay) {
@@ -203,7 +230,8 @@ public final class ContractData extends SavedData {
                             contractTag.getLong("Reward"),
                             contractTag.getInt("Progress"),
                             contractTag.getBoolean("Claimed"),
-                            contractTag.getBoolean("Accepted")
+                            contractTag.getBoolean("Accepted"),
+                            contractTag.getString("RewardToken")
                     ));
                 }
 
@@ -236,6 +264,7 @@ public final class ContractData extends SavedData {
                 contractTag.putInt("Progress", contract.progress());
                 contractTag.putBoolean("Claimed", contract.claimed());
                 contractTag.putBoolean("Accepted", contract.accepted());
+                contractTag.putString("RewardToken", contract.rewardToken());
                 contractList.add(contractTag);
             }
 
@@ -267,14 +296,19 @@ public final class ContractData extends SavedData {
             long reward,
             int progress,
             boolean claimed,
-            boolean accepted
+            boolean accepted,
+            String rewardToken
     ) {
+        public ContractEntry withClaimed(boolean value) {
+            return new ContractEntry(id, title, description, target, reward, progress, value, accepted, rewardToken);
+        }
+
         public ContractEntry withAccepted(boolean value) {
-            return new ContractEntry(id, title, description, target, reward, progress, claimed, value);
+            return new ContractEntry(id, title, description, target, reward, progress, claimed, value, rewardToken);
         }
 
         public ContractEntry withProgress(int value) {
-            return new ContractEntry(id, title, description, target, reward, value, claimed, accepted);
+            return new ContractEntry(id, title, description, target, reward, value, claimed, accepted, rewardToken);
         }
     }
 }
