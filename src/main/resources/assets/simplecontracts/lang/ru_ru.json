@@ -18,5 +18,7 @@
   "contract.simplecontracts.explorer.description": "Посетите новые места",
   "screen.simplecontracts.contract_board.accept": "Принять",
   "screen.simplecontracts.contract_board.accepted": "Принят",
-  "hud.simplecontracts.active_contracts": "Активные контракты"
+  "hud.simplecontracts.active_contracts": "Активные контракты",
+  "screen.simplecontracts.contract_board.claim": "Забрать",
+  "screen.simplecontracts.contract_board.claimed": "Получено"
 }
