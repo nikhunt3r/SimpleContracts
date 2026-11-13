@@ -75,8 +75,8 @@ public final class ContractBoardScreen extends AbstractContainerScreen<ContractB
         // Three compact contract panels.
         for (int slot = 0; slot < ContractBoardMenu.CONTRACT_COUNT; slot++) {
             int panelY = y + 34 + slot * 30;
-            graphics.fill(x + 9, panelY, right - 9, panelY + 27, 0xFF777777);
-            graphics.fill(x + 10, panelY + 1, right - 10, panelY + 26, 0xFFE0E0E0);
+            graphics.fill(x + 9, panelY, right - 9, panelY + 29, 0xFF777777);
+            graphics.fill(x + 10, panelY + 1, right - 10, panelY + 28, 0xFFE0E0E0);
         }
     }
 
@@ -101,7 +101,7 @@ public final class ContractBoardScreen extends AbstractContainerScreen<ContractB
                 continue;
             }
 
-            int rowY = 38 + slot * 30;
+            int rowY = 36 + slot * 30;
             String contractKey = CONTRACT_KEYS[type];
 
             Component title = Component.translatable(
@@ -118,8 +118,8 @@ public final class ContractBoardScreen extends AbstractContainerScreen<ContractB
             );
 
             graphics.drawString(this.font, title, 15, rowY, 0x202020, false);
-            graphics.drawString(this.font, description, 15, rowY + 10, 0x404040, false);
-            graphics.drawString(this.font, details, 15, rowY + 20, 0x404040, false);
+            graphics.drawString(this.font, description, 15, rowY + 9, 0x404040, false);
+            graphics.drawString(this.font, details, 15, rowY + 18, 0x404040, false);
         }
     }
 }
