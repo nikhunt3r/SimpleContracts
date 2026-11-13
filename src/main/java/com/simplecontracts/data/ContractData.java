@@ -225,7 +225,17 @@ public final class ContractData extends SavedData {
                     .forEach(generated::add);
         }
 
+        Set<String> previousOffers = new HashSet<>();
+        if (current != null) {
+            current.contracts().stream()
+                    .filter(contract -> !contract.accepted())
+                    .map(ContractEntry::id)
+                    .forEach(previousOffers::add);
+        }
+
         List<ContractTemplate> choices = new ArrayList<>(TEMPLATES);
+        choices.removeIf(template -> previousOffers.contains(template.id()));
+
         long seed = playerId.getMostSignificantBits()
                 ^ playerId.getLeastSignificantBits()
                 ^ (refreshDay * 0x9E3779B97F4A7C15L)
