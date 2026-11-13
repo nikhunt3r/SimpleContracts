@@ -1,6 +1,7 @@
 package com.simplecontracts.data;
 
 import com.simpleeconomy.api.EconomyAPI;
+import com.simplecontracts.config.SimpleContractsConfig;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -14,7 +15,6 @@ import java.util.*;
 public final class ContractData extends SavedData {
     private static final String DATA_NAME = "simplecontracts_contracts";
     public static final int CONTRACTS_PER_LEVEL = 3;
-    public static final int MAX_ACTIVE_CONTRACTS = 3;
     private static final SavedData.Factory<ContractData> FACTORY =
             new SavedData.Factory<>(ContractData::new, ContractData::load, DataFixTypes.LEVEL);
 
@@ -64,7 +64,9 @@ public final class ContractData extends SavedData {
     }
 
     public int forceRefresh(long day, Collection<ServerPlayer> online) {
-        if (day > globalRefreshDay) globalRefreshDay = day;
+        if (globalRefreshDay == Long.MIN_VALUE || day > globalRefreshDay) {
+            globalRefreshDay = day;
+        }
         globalRefreshVersion++;
         for (ServerPlayer player : online) ensurePlayer(player.getUUID(), globalRefreshDay, globalRefreshVersion);
         setDirty();
@@ -72,7 +74,10 @@ public final class ContractData extends SavedData {
     }
 
     public List<ContractEntry> getOrCreateContracts(UUID id, long day) {
-        if (day > globalRefreshDay) {
+        boolean firstRefresh = globalRefreshDay == Long.MIN_VALUE;
+        boolean intervalElapsed = !firstRefresh
+                && day - globalRefreshDay >= SimpleContractsConfig.getRefreshIntervalDays();
+        if (firstRefresh || intervalElapsed) {
             globalRefreshDay = day;
             globalRefreshVersion++;
             setDirty();
@@ -104,36 +109,25 @@ public final class ContractData extends SavedData {
     }
 
     public static int getLevelForReputation(int points) {
-        if (points <= 50) return 1;
-        if (points <= 120) return 2;
-        if (points <= 250) return 3;
-        if (points <= 500) return 4;
+        if (points <= SimpleContractsConfig.getLevelMaxReputation(1)) return 1;
+        if (points <= SimpleContractsConfig.getLevelMaxReputation(2)) return 2;
+        if (points <= SimpleContractsConfig.getLevelMaxReputation(3)) return 3;
+        if (points <= SimpleContractsConfig.getLevelMaxReputation(4)) return 4;
         return 5;
     }
 
     public static int getNextLevelThreshold(int level) {
-        return switch (level) {
-            case 1 -> 51;
-            case 2 -> 121;
-            case 3 -> 251;
-            case 4 -> 501;
-            default -> -1;
-        };
+        return level >= 1 && level <= 4
+                ? SimpleContractsConfig.getLevelMaxReputation(level) + 1
+                : -1;
     }
 
     public static int getReputationReward(int level) {
-        return switch (level) {
-            case 1 -> 5;
-            case 2 -> 10;
-            case 3 -> 15;
-            case 4 -> 20;
-            case 5 -> 25;
-            default -> 0;
-        };
+        return SimpleContractsConfig.getReputationReward(level);
     }
 
     public boolean canAcceptMore(UUID id) {
-        return getActiveContracts(id).size() < MAX_ACTIVE_CONTRACTS;
+        return getActiveContracts(id).size() < SimpleContractsConfig.getMaxActiveContracts();
     }
 
     public boolean acceptContract(UUID id, int level, int pageIndex) {
@@ -258,9 +252,16 @@ public final class ContractData extends SavedData {
     }
 
     private static ContractEntry create(ContractTemplate t, Random random) {
+        int generatedTarget = random.nextInt(t.targetMin(), t.targetMax() + 1);
+        int target = Math.max(1, (int) Math.round(
+                generatedTarget * SimpleContractsConfig.getObjectiveAmountMultiplier()
+        ));
+        int minimumReward = SimpleContractsConfig.getMinimumMoneyReward(t.level());
+        int maximumReward = SimpleContractsConfig.getMaximumMoneyReward(t.level());
+        long reward = random.nextInt(minimumReward, maximumReward + 1);
+
         return new ContractEntry(t.id(), t.level(), t.title(), t.description(),
-                random.nextInt(t.targetMin(), t.targetMax() + 1),
-                random.nextInt(t.rewardMin(), t.rewardMax() + 1), 0, false, false, UUID.randomUUID().toString());
+                target, reward, 0, false, false, UUID.randomUUID().toString());
     }
 
     private static List<ContractTemplate> templates(int level) {
