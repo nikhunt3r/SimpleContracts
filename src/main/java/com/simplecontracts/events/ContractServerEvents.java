@@ -70,6 +70,15 @@ public final class ContractServerEvents {
             case "minecraft:zombie" -> "zombie_hunter";
             case "minecraft:skeleton" -> "skeleton_hunter";
             case "minecraft:spider" -> "spider_hunter";
+            case "minecraft:creeper" -> "creeper_hunter";
+            case "minecraft:drowned" -> "drowned_hunter";
+            case "minecraft:enderman" -> "enderman_hunter";
+            case "minecraft:slime" -> "slime_hunter";
+            case "minecraft:blaze" -> "blaze_hunter";
+            case "minecraft:witch" -> "witch_hunter";
+            case "minecraft:wither_skeleton" -> "wither_skeleton_hunter";
+            case "minecraft:guardian", "minecraft:elder_guardian" -> "guardian_hunter";
+            case "minecraft:warden" -> "warden_hunter";
             default -> null;
         };
 
@@ -86,22 +95,28 @@ public final class ContractServerEvents {
 
         if (event.getState().is(BlockTags.IRON_ORES)) {
             advance(player, "iron_miner", 1);
-            return;
-        }
-
-        if (event.getState().is(BlockTags.LOGS)) {
+        } else if (event.getState().is(BlockTags.GOLD_ORES)) {
+            advance(player, "gold_miner", 1);
+        } else if (event.getState().is(BlockTags.DIAMOND_ORES)) {
+            advance(player, "diamond_miner", 1);
+        } else if (event.getState().is(BlockTags.REDSTONE_ORES)) {
+            advance(player, "redstone_miner", 1);
+        } else if (event.getState().is(BlockTags.EMERALD_ORES)) {
+            advance(player, "emerald_miner", 1);
+        } else if (event.getState().is(BlockTags.LOGS)) {
             advance(player, "woodcutter", 1);
-            return;
-        }
-
-        if (event.getState().is(BlockTags.BASE_STONE_OVERWORLD)) {
+        } else if (event.getState().is(BlockTags.BASE_STONE_OVERWORLD)) {
             advance(player, "stone_miner", 1);
-            return;
-        }
-
-        if (event.getState().is(Blocks.WHEAT)
+        } else if (event.getState().is(Blocks.OBSIDIAN)) {
+            advance(player, "obsidian_miner", 1);
+        } else if (event.getState().is(Blocks.ANCIENT_DEBRIS)) {
+            advance(player, "ancient_debris_miner", 1);
+        } else if (event.getState().is(Blocks.WHEAT)
                 && event.getState().getValue(CropBlock.AGE) == CropBlock.MAX_AGE) {
             advance(player, "wheat_farmer", 1);
+        } else if ((event.getState().is(Blocks.CARROTS) || event.getState().is(Blocks.POTATOES))
+                && event.getState().getValue(CropBlock.AGE) == CropBlock.MAX_AGE) {
+            advance(player, "root_farmer", 1);
         }
     }
 
