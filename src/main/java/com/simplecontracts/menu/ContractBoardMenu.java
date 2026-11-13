@@ -45,6 +45,9 @@ public final class ContractBoardMenu extends AbstractContainerMenu {
         this.data = data;
         this.serverData = serverData;
         this.playerId = playerId;
+        if (serverData != null && playerId != null) {
+            writeData(serverData.getContracts(playerId, 1), 1);
+        }
         addDataSlots(data);
     }
 
