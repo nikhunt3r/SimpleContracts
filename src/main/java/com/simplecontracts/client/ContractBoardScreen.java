@@ -107,6 +107,9 @@ public final class ContractBoardScreen extends AbstractContainerScreen<ContractB
             Component title = Component.translatable(
                     "contract.simplecontracts." + contractKey + ".title"
             );
+            Component description = Component.translatable(
+                    "contract.simplecontracts." + contractKey + ".description"
+            );
             Component details = Component.translatable(
                     "screen.simplecontracts.contract_board.details",
                     this.menu.getContractProgress(slot),
@@ -115,7 +118,8 @@ public final class ContractBoardScreen extends AbstractContainerScreen<ContractB
             );
 
             graphics.drawString(this.font, title, 15, rowY, 0x202020, false);
-            graphics.drawString(this.font, details, 15, rowY + 12, 0x404040, false);
+            graphics.drawString(this.font, description, 15, rowY + 10, 0x404040, false);
+            graphics.drawString(this.font, details, 15, rowY + 20, 0x404040, false);
         }
     }
 }
