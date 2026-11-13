@@ -15,7 +15,7 @@ import java.util.List;
 
 public final class ContractBoardMenu extends AbstractContainerMenu {
     public static final int CONTRACT_COUNT = 3;
-    private static final int VALUES_PER_CONTRACT = 5;
+    private static final int VALUES_PER_CONTRACT = 6;
     private static final int DATA_COUNT = CONTRACT_COUNT * VALUES_PER_CONTRACT;
 
     private final ContainerLevelAccess access;
@@ -71,7 +71,7 @@ public final class ContractBoardMenu extends AbstractContainerMenu {
     }
 
     public boolean isContractClaimed(int slot) {
-        return contractData.get(index(slot, 4)) != 0;
+        return contractData.get(index(slot, 5)) != 0;
     }
 
     private static int index(int slot, int valueOffset) {
@@ -94,6 +94,7 @@ public final class ContractBoardMenu extends AbstractContainerMenu {
             long reward = Math.max(0L, contract.reward());
             data.set(offset + 3, (int) reward);
             data.set(offset + 4, (int) (reward >>> 32));
+            data.set(offset + 5, contract.claimed() ? 1 : 0);
         }
 
         return data;
