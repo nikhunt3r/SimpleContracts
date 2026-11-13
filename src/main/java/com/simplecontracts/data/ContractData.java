@@ -69,7 +69,7 @@ public final class ContractData extends SavedData {
 
     public List<ContractEntry> getActiveContracts(UUID playerId) {
         return getContracts(playerId).stream()
-                .filter(ContractEntry::accepted)
+                .filter(contract -> contract.accepted() && !contract.claimed())
                 .toList();
     }
 
@@ -222,6 +222,12 @@ public final class ContractData extends SavedData {
 
                 for (int i = 0; i < contractList.size(); i++) {
                     CompoundTag contractTag = contractList.getCompound(i);
+                    String rewardToken = contractTag.getString("RewardToken");
+                    if (rewardToken.isBlank()) {
+                        rewardToken = UUID.randomUUID().toString();
+                        contractTag.putString("RewardToken", rewardToken);
+                        data.setDirty();
+                    }
                     contracts.add(new ContractEntry(
                             contractTag.getString("Id"),
                             contractTag.getString("Title"),
@@ -231,7 +237,7 @@ public final class ContractData extends SavedData {
                             contractTag.getInt("Progress"),
                             contractTag.getBoolean("Claimed"),
                             contractTag.getBoolean("Accepted"),
-                            contractTag.getString("RewardToken")
+                            rewardToken
                     ));
                 }
 
