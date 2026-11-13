@@ -15,5 +15,8 @@
   "contract.simplecontracts.fisher.title": "Fisher",
   "contract.simplecontracts.fisher.description": "Catch fish",
   "contract.simplecontracts.explorer.title": "Explorer",
-  "contract.simplecontracts.explorer.description": "Visit new places"
+  "contract.simplecontracts.explorer.description": "Visit new places",
+  "screen.simplecontracts.contract_board.accept": "Accept",
+  "screen.simplecontracts.contract_board.accepted": "Accepted",
+  "hud.simplecontracts.active_contracts": "Active contracts"
 }
