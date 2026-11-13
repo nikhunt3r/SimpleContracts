@@ -18,7 +18,7 @@ public record ActiveContractsPayload(List<HudContract> contracts) implements Cus
     public static final StreamCodec<RegistryFriendlyByteBuf, ActiveContractsPayload> STREAM_CODEC =
             StreamCodec.of(ActiveContractsPayload::encode, ActiveContractsPayload::decode);
 
-    private static final int MAX_CONTRACTS = 3;
+    private static final int MAX_CONTRACTS = 15;
 
     public ActiveContractsPayload {
         contracts = List.copyOf(contracts);
