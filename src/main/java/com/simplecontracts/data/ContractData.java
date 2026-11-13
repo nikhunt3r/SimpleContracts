@@ -50,6 +50,7 @@ public final class ContractData extends SavedData {
     private final Map<UUID, PlayerContracts> players = new HashMap<>();
     private final Set<String> exploredLocations = new HashSet<>();
     private long globalRefreshDay = Long.MIN_VALUE;
+    private long globalRefreshVersion;
 
     public static ContractData get(MinecraftServer server) {
         return server.overworld().getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
@@ -61,13 +62,32 @@ public final class ContractData extends SavedData {
         }
     }
 
+    /**
+     * Starts a new shared refresh cycle immediately.
+     * Accepted, unclaimed contracts are preserved; available offers are regenerated.
+     */
+    public int forceRefresh(long overworldDay, Collection<ServerPlayer> onlinePlayers) {
+        if (overworldDay > this.globalRefreshDay) {
+            this.globalRefreshDay = overworldDay;
+        }
+
+        this.globalRefreshVersion++;
+        for (ServerPlayer player : onlinePlayers) {
+            ensurePlayer(player.getUUID(), this.globalRefreshDay, this.globalRefreshVersion);
+        }
+
+        setDirty();
+        return onlinePlayers.size();
+    }
+
     public List<ContractEntry> getOrCreateContracts(UUID playerId, long overworldDay) {
         if (overworldDay > this.globalRefreshDay) {
             this.globalRefreshDay = overworldDay;
+            this.globalRefreshVersion++;
             setDirty();
         }
 
-        ensurePlayer(playerId, this.globalRefreshDay);
+        ensurePlayer(playerId, this.globalRefreshDay, this.globalRefreshVersion);
         return getContracts(playerId);
     }
 
@@ -99,7 +119,7 @@ public final class ContractData extends SavedData {
         }
 
         updated.set(contractIndex, contract.withAccepted(true));
-        players.put(playerId, new PlayerContracts(current.refreshDay(), updated));
+        players.put(playerId, new PlayerContracts(current.refreshDay(), current.refreshVersion(), updated));
         setDirty();
         return true;
     }
@@ -134,7 +154,7 @@ public final class ContractData extends SavedData {
         }
 
         if (changed) {
-            players.put(playerId, new PlayerContracts(current.refreshDay(), updated));
+            players.put(playerId, new PlayerContracts(current.refreshDay(), current.refreshVersion(), updated));
             setDirty();
         }
 
@@ -157,7 +177,7 @@ public final class ContractData extends SavedData {
 
         List<ContractEntry> updated = new ArrayList<>(current.contracts());
         updated.set(contractIndex, contract.withClaimed(true));
-        players.put(player.getUUID(), new PlayerContracts(current.refreshDay(), updated));
+        players.put(player.getUUID(), new PlayerContracts(current.refreshDay(), current.refreshVersion(), updated));
         setDirty();
         return true;
     }
@@ -188,9 +208,11 @@ public final class ContractData extends SavedData {
         return advanceProgress(playerId, "explorer", 1);
     }
 
-    private void ensurePlayer(UUID playerId, long refreshDay) {
+    private void ensurePlayer(UUID playerId, long refreshDay, long refreshVersion) {
         PlayerContracts current = players.get(playerId);
-        if (current != null && current.refreshDay() >= refreshDay) {
+        if (current != null
+                && current.refreshDay() >= refreshDay
+                && current.refreshVersion() >= refreshVersion) {
             return;
         }
 
@@ -206,7 +228,8 @@ public final class ContractData extends SavedData {
         List<ContractTemplate> choices = new ArrayList<>(TEMPLATES);
         long seed = playerId.getMostSignificantBits()
                 ^ playerId.getLeastSignificantBits()
-                ^ (refreshDay * 0x9E3779B97F4A7C15L);
+                ^ (refreshDay * 0x9E3779B97F4A7C15L)
+                ^ (refreshVersion * 0xD1B54A32D192ED03L);
         Collections.shuffle(choices, new Random(seed));
 
         for (ContractTemplate template : choices) {
@@ -229,7 +252,7 @@ public final class ContractData extends SavedData {
             }
         }
 
-        players.put(playerId, new PlayerContracts(refreshDay, generated));
+        players.put(playerId, new PlayerContracts(refreshDay, refreshVersion, generated));
         setDirty();
     }
 
@@ -242,6 +265,7 @@ public final class ContractData extends SavedData {
     ) {
         ContractData data = new ContractData();
         data.globalRefreshDay = tag.getLong("GlobalRefreshDay");
+        data.globalRefreshVersion = tag.getLong("GlobalRefreshVersion");
 
         ListTag exploredTag = tag.getList("ExploredLocations", Tag.TAG_STRING);
         for (int i = 0; i < exploredTag.size(); i++) {
@@ -254,6 +278,7 @@ public final class ContractData extends SavedData {
                 UUID playerId = UUID.fromString(key);
                 CompoundTag playerTag = playersTag.getCompound(key);
                 long refreshDay = playerTag.getLong("RefreshDay");
+                long refreshVersion = playerTag.getLong("RefreshVersion");
                 ListTag contractList = playerTag.getList("Contracts", Tag.TAG_COMPOUND);
                 List<ContractEntry> contracts = new ArrayList<>();
 
@@ -278,7 +303,7 @@ public final class ContractData extends SavedData {
                     ));
                 }
 
-                data.players.put(playerId, new PlayerContracts(refreshDay, contracts));
+                data.players.put(playerId, new PlayerContracts(refreshDay, refreshVersion, contracts));
             } catch (IllegalArgumentException ignored) {
                 // Ignore malformed player UUID entries rather than failing world loading.
             }
@@ -290,11 +315,13 @@ public final class ContractData extends SavedData {
     @Override
     public CompoundTag save(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
         tag.putLong("GlobalRefreshDay", globalRefreshDay);
+        tag.putLong("GlobalRefreshVersion", globalRefreshVersion);
         CompoundTag playersTag = new CompoundTag();
 
         for (Map.Entry<UUID, PlayerContracts> playerEntry : players.entrySet()) {
             CompoundTag playerTag = new CompoundTag();
             playerTag.putLong("RefreshDay", playerEntry.getValue().refreshDay());
+            playerTag.putLong("RefreshVersion", playerEntry.getValue().refreshVersion());
             ListTag contractList = new ListTag();
 
             for (ContractEntry contract : playerEntry.getValue().contracts()) {
@@ -333,7 +360,7 @@ public final class ContractData extends SavedData {
     ) {
     }
 
-    private record PlayerContracts(long refreshDay, List<ContractEntry> contracts) {
+    private record PlayerContracts(long refreshDay, long refreshVersion, List<ContractEntry> contracts) {
     }
 
     public record ContractEntry(
