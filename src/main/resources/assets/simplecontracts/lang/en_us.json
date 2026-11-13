@@ -26,5 +26,6 @@
   "screen.simplecontracts.contract_board.accepted": "Accepted",
   "hud.simplecontracts.active_contracts": "Active contracts",
   "screen.simplecontracts.contract_board.claim": "Claim",
-  "screen.simplecontracts.contract_board.claimed": "Claimed"
+  "screen.simplecontracts.contract_board.claimed": "Claimed",
+  "commands.simplecontracts.refresh.success": "Contracts refreshed. Online players updated: %s. Others will refresh when they join."
 }
