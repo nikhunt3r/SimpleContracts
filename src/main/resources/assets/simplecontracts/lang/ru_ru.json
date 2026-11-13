@@ -15,5 +15,8 @@
   "contract.simplecontracts.fisher.title": "Рыбак",
   "contract.simplecontracts.fisher.description": "Поймайте рыбу",
   "contract.simplecontracts.explorer.title": "Исследователь",
-  "contract.simplecontracts.explorer.description": "Посетите новые места"
+  "contract.simplecontracts.explorer.description": "Посетите новые места",
+  "screen.simplecontracts.contract_board.accept": "Принять",
+  "screen.simplecontracts.contract_board.accepted": "Принят",
+  "hud.simplecontracts.active_contracts": "Активные контракты"
 }
