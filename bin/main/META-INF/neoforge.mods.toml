@@ -1,0 +1,32 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+license="All Rights Reserved"
+
+[[mods]]
+modId="simplecontracts"
+version="0.1.0"
+displayName="Simple Contracts"
+description='''
+A server-side contract board with individual player tasks and shared refresh cycles.
+'''
+
+[[dependencies.simplecontracts]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.265,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.simplecontracts]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1]"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.simplecontracts]]
+modId="simpleeconomy"
+type="required"
+versionRange="[1.0.0,)"
+ordering="AFTER"
+side="BOTH"

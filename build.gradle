@@ -20,7 +20,7 @@ repositories {
 dependencies {
     // Place the freshly built Simple Economy JAR in ./libs.
     // It is needed at compile time for the public EconomyAPI.
-    compileOnly files("libs/simpleeconomy-${simpleeconomy_version}.jar")
+    implementation files("libs/simpleeconomy-${simpleeconomy_version}.jar")
 }
 
 neoForge {
