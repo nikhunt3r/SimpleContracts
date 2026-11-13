@@ -6,7 +6,7 @@ Separate NeoForge mod for Minecraft 1.21.1 / Java 21.
 
 - Separate mod ID: `simplecontracts`
 - Separate package: `com.simplecontracts`
-- Placeable contract board block
+- Placeable contract board block, listed in the Functional Blocks creative tab
 - Right-clicking the board opens a server-authoritative menu
 - Crisp vanilla-style GUI shell with a working Close button
 - Required runtime dependency on `simpleeconomy`
@@ -24,7 +24,7 @@ The local JAR is used by the development project. It is not shaded into the Simp
 ## Current test
 
 1. Launch the client with both mods installed.
-2. Find **Contract Board** in the Simple Contracts creative tab/search.
+2. Open the **Functional Blocks** creative tab and find **Contract Board** (or use the search).
 3. Place it and right-click with an empty hand.
 4. Confirm the board window opens, the text is sharp, and the Close button works.
 5. Walk away from the board and confirm the menu closes when the block is no longer valid.
