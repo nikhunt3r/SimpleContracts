@@ -137,25 +137,37 @@ public final class ContractData extends SavedData {
             return;
         }
 
+        // Accepted contracts survive the daily board refresh. Only unaccepted offers rotate.
+        List<ContractEntry> generated = new ArrayList<>();
+        if (current != null) {
+            current.contracts().stream()
+                    .filter(ContractEntry::accepted)
+                    .forEach(generated::add);
+        }
+
         List<ContractTemplate> choices = new ArrayList<>(TEMPLATES);
         long seed = playerId.getMostSignificantBits()
                 ^ playerId.getLeastSignificantBits()
                 ^ (refreshDay * 0x9E3779B97F4A7C15L);
         Collections.shuffle(choices, new Random(seed));
 
-        List<ContractEntry> generated = new ArrayList<>();
-        for (int i = 0; i < Math.min(3, choices.size()); i++) {
-            ContractTemplate template = choices.get(i);
-            generated.add(new ContractEntry(
-                    template.id(),
-                    template.title(),
-                    template.description(),
-                    template.target(),
-                    template.reward(),
-                    0,
-                    false,
-                    false
-            ));
+        for (ContractTemplate template : choices) {
+            if (generated.size() >= 3) {
+                break;
+            }
+            boolean alreadyActive = generated.stream().anyMatch(entry -> entry.id().equals(template.id()));
+            if (!alreadyActive) {
+                generated.add(new ContractEntry(
+                        template.id(),
+                        template.title(),
+                        template.description(),
+                        template.target(),
+                        template.reward(),
+                        0,
+                        false,
+                        false
+                ));
+            }
         }
 
         players.put(playerId, new PlayerContracts(refreshDay, generated));
