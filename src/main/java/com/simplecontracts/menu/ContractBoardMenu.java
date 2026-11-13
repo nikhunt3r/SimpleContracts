@@ -94,6 +94,12 @@ public final class ContractBoardMenu extends AbstractContainerMenu {
         return true;
     }
 
+    public void refreshFromServer() {
+        if (serverData != null && playerId != null) {
+            writeData(serverData.getContracts(playerId));
+        }
+    }
+
     private void writeData(List<ContractData.ContractEntry> contracts) {
         for (int slot = 0; slot < CONTRACT_COUNT; slot++) {
             int offset = index(slot, 0);
