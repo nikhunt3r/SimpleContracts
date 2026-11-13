@@ -8,6 +8,15 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 
 public final class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMenu> {
+    private static final String[] CONTRACT_KEYS = {
+            "zombie_hunter",
+            "skeleton_hunter",
+            "iron_miner",
+            "wheat_farmer",
+            "fisher",
+            "explorer"
+    };
+
     public ContractBoardScreen(
             ContractBoardMenu menu,
             Inventory playerInventory,
@@ -63,9 +72,12 @@ public final class ContractBoardScreen extends AbstractContainerScreen<ContractB
         graphics.fill(x + 6, y + 6, right - 6, y + 7, 0xFF555555);
         graphics.fill(x + 6, y + 6, x + 7, y + 26, 0xFF555555);
 
-        // Empty content area, reserved for generated contracts.
-        graphics.fill(x + 10, y + 34, right - 10, bottom - 34, 0xFF8B8B8B);
-        graphics.fill(x + 11, y + 35, right - 11, bottom - 35, 0xFFBDBDBD);
+        // Three compact contract panels.
+        for (int slot = 0; slot < ContractBoardMenu.CONTRACT_COUNT; slot++) {
+            int panelY = y + 34 + slot * 30;
+            graphics.fill(x + 9, panelY, right - 9, panelY + 27, 0xFF777777);
+            graphics.fill(x + 10, panelY + 1, right - 10, panelY + 26, 0xFFE0E0E0);
+        }
     }
 
     @Override
@@ -74,8 +86,6 @@ public final class ContractBoardScreen extends AbstractContainerScreen<ContractB
             int mouseX,
             int mouseY
     ) {
-        // Draw only the board title. AbstractContainerScreen's default labels
-        // also draw the inventory caption, which this screen does not use.
         graphics.drawString(
                 this.font,
                 Component.translatable("screen.simplecontracts.contract_board"),
@@ -85,24 +95,27 @@ public final class ContractBoardScreen extends AbstractContainerScreen<ContractB
                 false
         );
 
-        Component emptyMessage =
-                Component.translatable("screen.simplecontracts.contract_board.empty");
-        Component hintMessage =
-                Component.translatable("screen.simplecontracts.contract_board.hint");
+        for (int slot = 0; slot < ContractBoardMenu.CONTRACT_COUNT; slot++) {
+            int type = this.menu.getContractType(slot);
+            if (type < 0 || type >= CONTRACT_KEYS.length) {
+                continue;
+            }
 
-        graphics.drawCenteredString(
-                this.font,
-                emptyMessage,
-                this.imageWidth / 2,
-                76,
-                0x404040
-        );
-        graphics.drawCenteredString(
-                this.font,
-                hintMessage,
-                this.imageWidth / 2,
-                91,
-                0x555555
-        );
+            int rowY = 38 + slot * 30;
+            String contractKey = CONTRACT_KEYS[type];
+
+            Component title = Component.translatable(
+                    "contract.simplecontracts." + contractKey + ".title"
+            );
+            Component details = Component.translatable(
+                    "screen.simplecontracts.contract_board.details",
+                    this.menu.getContractProgress(slot),
+                    this.menu.getContractTarget(slot),
+                    this.menu.getContractReward(slot)
+            );
+
+            graphics.drawString(this.font, title, 15, rowY, 0x202020, false);
+            graphics.drawString(this.font, details, 15, rowY + 12, 0x404040, false);
+        }
     }
 }
