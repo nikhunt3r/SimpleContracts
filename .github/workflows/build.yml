@@ -58,7 +58,9 @@ jobs:
       - name: Upload Simple Contracts JAR
         uses: actions/upload-artifact@v4
         with:
-          name: SimpleContracts-1.0.0
-          path: build/libs/simplecontracts-1.0.0.jar
+          name: SimpleContracts-Release-1.0.0
+          path: |
+            build/libs/simplecontracts-1.0.0.jar
+            SimpleEconomy/build/libs/simpleeconomy-1.0.0.jar
           if-no-files-found: error
           compression-level: 0
