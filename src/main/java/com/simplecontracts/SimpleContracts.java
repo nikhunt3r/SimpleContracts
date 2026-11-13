@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.simplecontracts.registry.ModBlocks;
 import com.simplecontracts.registry.ModItems;
 import com.simplecontracts.registry.ModMenus;
+import com.simplecontracts.network.ContractNetwork;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -20,6 +21,7 @@ public final class SimpleContracts {
         ModBlocks.BLOCKS.register(modEventBus);
         ModItems.ITEMS.register(modEventBus);
         ModMenus.MENUS.register(modEventBus);
+        ContractNetwork.register(modEventBus);
 
         modEventBus.addListener(this::addCreative);
 
