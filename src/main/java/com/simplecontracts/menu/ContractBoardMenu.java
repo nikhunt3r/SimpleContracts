@@ -19,134 +19,132 @@ import java.util.UUID;
 public final class ContractBoardMenu extends AbstractContainerMenu {
     public static final int CONTRACT_COUNT = 3;
     private static final int VALUES_PER_CONTRACT = 7;
-    private static final int DATA_COUNT = CONTRACT_COUNT * VALUES_PER_CONTRACT;
+    private static final int META_OFFSET = CONTRACT_COUNT * VALUES_PER_CONTRACT;
+    private static final int DATA_COUNT = META_OFFSET + 4;
 
     private final ContainerLevelAccess access;
-    private final ContainerData contractData;
+    private final ContainerData data;
     private final ContractData serverData;
     private final UUID playerId;
 
-    public ContractBoardMenu(int containerId, Inventory playerInventory) {
-        this(containerId, playerInventory, ContainerLevelAccess.NULL,
-                new SimpleContainerData(DATA_COUNT), null, null);
+    public ContractBoardMenu(int id, Inventory inventory) {
+        this(id, inventory, ContainerLevelAccess.NULL, new SimpleContainerData(DATA_COUNT), null, null);
     }
 
-    public ContractBoardMenu(
-            int containerId,
-            Inventory playerInventory,
-            ContainerLevelAccess access,
-            ContractData serverData,
-            UUID playerId,
-            List<ContractData.ContractEntry> contracts
-    ) {
-        this(containerId, playerInventory, access, createData(contracts), serverData, playerId);
+    public ContractBoardMenu(int id, Inventory inventory, ContainerLevelAccess access,
+                             ContractData serverData, UUID playerId,
+                             List<ContractData.ContractEntry> contracts) {
+        this(id, inventory, access, createData(contracts), serverData, playerId);
     }
 
-    private ContractBoardMenu(
-            int containerId,
-            Inventory playerInventory,
-            ContainerLevelAccess access,
-            ContainerData contractData,
-            ContractData serverData,
-            UUID playerId
-    ) {
-        super(ModMenus.CONTRACT_BOARD.get(), containerId);
-        if (contractData.getCount() != DATA_COUNT) {
-            throw new IllegalArgumentException("Contract board requires " + DATA_COUNT + " data values");
-        }
+    private ContractBoardMenu(int id, Inventory inventory, ContainerLevelAccess access,
+                              ContainerData data, ContractData serverData, UUID playerId) {
+        super(ModMenus.CONTRACT_BOARD.get(), id);
+        if (data.getCount() != DATA_COUNT) throw new IllegalArgumentException("Invalid contract data size");
         this.access = access;
-        this.contractData = contractData;
+        this.data = data;
         this.serverData = serverData;
         this.playerId = playerId;
-        this.addDataSlots(contractData);
+        addDataSlots(data);
     }
 
-    public int getContractType(int slot) { return contractData.get(index(slot, 0)); }
-    public int getContractTarget(int slot) { return contractData.get(index(slot, 1)); }
-    public int getContractProgress(int slot) { return contractData.get(index(slot, 2)); }
-
+    public int getContractType(int slot) { return data.get(index(slot, 0)); }
+    public int getContractTarget(int slot) { return data.get(index(slot, 1)); }
+    public int getContractProgress(int slot) { return data.get(index(slot, 2)); }
     public long getContractReward(int slot) {
         int offset = index(slot, 3);
-        return Integer.toUnsignedLong(contractData.get(offset))
-                | ((long) contractData.get(offset + 1) << 32);
+        return Integer.toUnsignedLong(data.get(offset)) | ((long)data.get(offset + 1) << 32);
     }
-
-    public boolean isContractClaimed(int slot) { return contractData.get(index(slot, 5)) != 0; }
-    public boolean isContractAccepted(int slot) { return contractData.get(index(slot, 6)) != 0; }
+    public boolean isContractClaimed(int slot) { return data.get(index(slot, 5)) != 0; }
+    public boolean isContractAccepted(int slot) { return data.get(index(slot, 6)) != 0; }
     public boolean isContractCompleted(int slot) { return getContractProgress(slot) >= getContractTarget(slot); }
+    public int getSelectedLevel() { return data.get(META_OFFSET); }
+    public int getReputation() { return data.get(META_OFFSET + 1); }
+    public int getPlayerLevel() { return data.get(META_OFFSET + 2); }
+    public int getActiveCount() { return data.get(META_OFFSET + 3); }
 
     @Override
     public boolean clickMenuButton(Player player, int buttonId) {
-        if (serverData == null || playerId == null || !(player instanceof ServerPlayer serverPlayer)) {
-            return false;
-        }
-        if (!stillValid(player)) {
-            return false;
+        if (serverData == null || playerId == null || !(player instanceof ServerPlayer serverPlayer)
+                || !stillValid(player)) return false;
+
+        int level = getSelectedLevel();
+        if (buttonId == 100 || buttonId == 101) {
+            int next = level + (buttonId == 100 ? -1 : 1);
+            if (next < 1 || next > serverData.getPlayerLevel(playerId)) return false;
+            writeData(serverData.getContracts(playerId, next), next);
+            return true;
         }
 
         boolean changed;
         if (buttonId >= 0 && buttonId < CONTRACT_COUNT) {
-            changed = serverData.acceptContract(playerId, buttonId);
+            changed = serverData.acceptContract(playerId, level, buttonId);
         } else if (buttonId >= 10 && buttonId < 10 + CONTRACT_COUNT) {
-            changed = serverData.claimReward(serverPlayer, buttonId - 10);
+            changed = serverData.claimReward(serverPlayer, level, buttonId - 10);
         } else {
             return false;
         }
 
-        if (!changed) {
-            return false;
-        }
-
-        writeData(serverData.getContracts(playerId));
+        if (!changed) return false;
+        writeData(serverData.getContracts(playerId, level), level);
         ContractNetworkSync.sync(serverPlayer, serverData);
         return true;
     }
 
     public void refreshFromServer() {
         if (serverData != null && playerId != null) {
-            writeData(serverData.getContracts(playerId));
+            int level = Math.min(getSelectedLevel(), serverData.getPlayerLevel(playerId));
+            level = Math.max(1, level);
+            writeData(serverData.getContracts(playerId, level), level);
         }
     }
 
-    private void writeData(List<ContractData.ContractEntry> contracts) {
+    private void writeData(List<ContractData.ContractEntry> contracts, int level) {
         for (int slot = 0; slot < CONTRACT_COUNT; slot++) {
             int offset = index(slot, 0);
             if (slot >= contracts.size()) {
-                for (int i = 0; i < VALUES_PER_CONTRACT; i++) contractData.set(offset + i, 0);
+                for (int i = 0; i < VALUES_PER_CONTRACT; i++) data.set(offset + i, -1);
                 continue;
             }
-            ContractData.ContractEntry contract = contracts.get(slot);
-            contractData.set(offset, contractTypeIndex(contract.id()));
-            contractData.set(offset + 1, contract.target());
-            contractData.set(offset + 2, contract.progress());
-            long reward = Math.max(0L, contract.reward());
-            contractData.set(offset + 3, (int) reward);
-            contractData.set(offset + 4, (int) (reward >>> 32));
-            contractData.set(offset + 5, contract.claimed() ? 1 : 0);
-            contractData.set(offset + 6, contract.accepted() ? 1 : 0);
+            ContractData.ContractEntry c = contracts.get(slot);
+            data.set(offset, contractTypeIndex(c.id()));
+            data.set(offset + 1, c.target());
+            data.set(offset + 2, c.progress());
+            data.set(offset + 3, (int)c.reward());
+            data.set(offset + 4, (int)(c.reward() >>> 32));
+            data.set(offset + 5, c.claimed() ? 1 : 0);
+            data.set(offset + 6, c.accepted() ? 1 : 0);
         }
-    }
-
-    private static int index(int slot, int valueOffset) {
-        if (slot < 0 || slot >= CONTRACT_COUNT) throw new IndexOutOfBoundsException("Contract slot: " + slot);
-        return slot * VALUES_PER_CONTRACT + valueOffset;
+        data.set(META_OFFSET, level);
+        data.set(META_OFFSET + 1, serverData == null || playerId == null ? 0 : serverData.getReputation(playerId));
+        data.set(META_OFFSET + 2, serverData == null || playerId == null ? 1 : serverData.getPlayerLevel(playerId));
+        data.set(META_OFFSET + 3, serverData == null || playerId == null ? 0 : serverData.getActiveContracts(playerId).size());
     }
 
     private static ContainerData createData(List<ContractData.ContractEntry> contracts) {
         SimpleContainerData data = new SimpleContainerData(DATA_COUNT);
-        for (int slot = 0; slot < Math.min(CONTRACT_COUNT, contracts.size()); slot++) {
-            ContractData.ContractEntry contract = contracts.get(slot);
+        for (int slot = 0; slot < CONTRACT_COUNT; slot++) {
             int offset = index(slot, 0);
-            data.set(offset, contractTypeIndex(contract.id()));
-            data.set(offset + 1, contract.target());
-            data.set(offset + 2, contract.progress());
-            long reward = Math.max(0L, contract.reward());
-            data.set(offset + 3, (int) reward);
-            data.set(offset + 4, (int) (reward >>> 32));
-            data.set(offset + 5, contract.claimed() ? 1 : 0);
-            data.set(offset + 6, contract.accepted() ? 1 : 0);
+            if (slot >= contracts.size()) {
+                for (int i = 0; i < VALUES_PER_CONTRACT; i++) data.set(offset + i, -1);
+                continue;
+            }
+            ContractData.ContractEntry c = contracts.get(slot);
+            data.set(offset, contractTypeIndex(c.id()));
+            data.set(offset + 1, c.target());
+            data.set(offset + 2, c.progress());
+            data.set(offset + 3, (int)c.reward());
+            data.set(offset + 4, (int)(c.reward() >>> 32));
+            data.set(offset + 5, c.claimed() ? 1 : 0);
+            data.set(offset + 6, c.accepted() ? 1 : 0);
         }
+        data.set(META_OFFSET, 1);
         return data;
+    }
+
+    private static int index(int slot, int field) {
+        if (slot < 0 || slot >= CONTRACT_COUNT) throw new IndexOutOfBoundsException("Contract slot: " + slot);
+        return slot * VALUES_PER_CONTRACT + field;
     }
 
     private static int contractTypeIndex(String id) {
@@ -160,17 +158,31 @@ public final class ContractBoardMenu extends AbstractContainerMenu {
             case "spider_hunter" -> 6;
             case "woodcutter" -> 7;
             case "stone_miner" -> 8;
+            case "creeper_hunter" -> 9;
+            case "drowned_hunter" -> 10;
+            case "gold_miner" -> 11;
+            case "root_farmer" -> 12;
+            case "enderman_hunter" -> 13;
+            case "diamond_miner" -> 14;
+            case "redstone_miner" -> 15;
+            case "slime_hunter" -> 16;
+            case "blaze_hunter" -> 17;
+            case "witch_hunter" -> 18;
+            case "emerald_miner" -> 19;
+            case "obsidian_miner" -> 20;
+            case "wither_skeleton_hunter" -> 21;
+            case "guardian_hunter" -> 22;
+            case "ancient_debris_miner" -> 23;
+            case "warden_hunter" -> 24;
             default -> -1;
         };
     }
 
     @Override
     public boolean stillValid(Player player) {
-        return AbstractContainerMenu.stillValid(this.access, player, ModBlocks.CONTRACT_BOARD.get());
+        return AbstractContainerMenu.stillValid(access, player, ModBlocks.CONTRACT_BOARD.get());
     }
 
     @Override
-    public ItemStack quickMoveStack(Player player, int slotIndex) {
-        return ItemStack.EMPTY;
-    }
+    public ItemStack quickMoveStack(Player player, int slotIndex) { return ItemStack.EMPTY; }
 }
