@@ -2,5 +2,18 @@
   "block.simplecontracts.contract_board": "Contract Board",
   "screen.simplecontracts.contract_board": "Contract Board",
   "screen.simplecontracts.contract_board.empty": "No contracts available yet",
-  "screen.simplecontracts.contract_board.hint": "New contracts appear after refresh."
+  "screen.simplecontracts.contract_board.hint": "New contracts appear after refresh.",
+  "screen.simplecontracts.contract_board.details": "Progress: %1$s/%2$s  |  Reward: %3$s",
+  "contract.simplecontracts.zombie_hunter.title": "Zombie Hunter",
+  "contract.simplecontracts.zombie_hunter.description": "Kill zombies",
+  "contract.simplecontracts.skeleton_hunter.title": "Skeleton Hunter",
+  "contract.simplecontracts.skeleton_hunter.description": "Kill skeletons",
+  "contract.simplecontracts.iron_miner.title": "Iron Miner",
+  "contract.simplecontracts.iron_miner.description": "Mine iron ore",
+  "contract.simplecontracts.wheat_farmer.title": "Farmer",
+  "contract.simplecontracts.wheat_farmer.description": "Harvest wheat",
+  "contract.simplecontracts.fisher.title": "Fisher",
+  "contract.simplecontracts.fisher.description": "Catch fish",
+  "contract.simplecontracts.explorer.title": "Explorer",
+  "contract.simplecontracts.explorer.description": "Visit new places"
 }
