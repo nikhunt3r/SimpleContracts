@@ -2,5 +2,18 @@
   "block.simplecontracts.contract_board": "Доска контрактов",
   "screen.simplecontracts.contract_board": "Доска контрактов",
   "screen.simplecontracts.contract_board.empty": "Пока нет доступных заданий",
-  "screen.simplecontracts.contract_board.hint": "Задания появятся после обновления."
+  "screen.simplecontracts.contract_board.hint": "Задания появятся после обновления.",
+  "screen.simplecontracts.contract_board.details": "Прогресс: %1$s/%2$s  |  Награда: %3$s",
+  "contract.simplecontracts.zombie_hunter.title": "Охотник на зомби",
+  "contract.simplecontracts.zombie_hunter.description": "Убейте зомби",
+  "contract.simplecontracts.skeleton_hunter.title": "Охотник на скелетов",
+  "contract.simplecontracts.skeleton_hunter.description": "Убейте скелетов",
+  "contract.simplecontracts.iron_miner.title": "Добытчик железа",
+  "contract.simplecontracts.iron_miner.description": "Добудьте железную руду",
+  "contract.simplecontracts.wheat_farmer.title": "Фермер",
+  "contract.simplecontracts.wheat_farmer.description": "Соберите пшеницу",
+  "contract.simplecontracts.fisher.title": "Рыбак",
+  "contract.simplecontracts.fisher.description": "Поймайте рыбу",
+  "contract.simplecontracts.explorer.title": "Исследователь",
+  "contract.simplecontracts.explorer.description": "Посетите новые места"
 }
