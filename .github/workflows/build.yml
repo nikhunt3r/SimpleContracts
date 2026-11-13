@@ -1,0 +1,64 @@
+name: Build Simple Contracts
+
+on:
+  push:
+    branches:
+      - "release/**"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Simple Economy and Simple Contracts
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out Simple Contracts
+        uses: actions/checkout@v4
+
+      - name: Check out compatible Simple Economy API
+        uses: actions/checkout@v4
+        with:
+          repository: nikhunt3r/simple-economy-mod
+          ref: feature/idempotent-contract-rewards
+          path: SimpleEconomy
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Build Simple Economy dependency
+        working-directory: SimpleEconomy
+        shell: pwsh
+        run: .\gradlew.bat --no-daemon clean build
+
+      - name: Prepare Simple Economy compile dependency
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force libs | Out-Null
+          $economyJar = "SimpleEconomy\build\libs\simpleeconomy-1.0.0.jar"
+          if (!(Test-Path $economyJar)) {
+            Get-ChildItem "SimpleEconomy\build\libs"
+            throw "Required Simple Economy JAR was not produced: $economyJar"
+          }
+          Copy-Item $economyJar "libs\simpleeconomy-1.0.0.jar" -Force
+
+      - name: Build Simple Contracts
+        shell: pwsh
+        run: .\gradlew.bat --no-daemon clean build
+
+      - name: Upload Simple Contracts JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: SimpleContracts-1.0.0
+          path: build/libs/simplecontracts-1.0.0.jar
+          if-no-files-found: error
+          compression-level: 0
