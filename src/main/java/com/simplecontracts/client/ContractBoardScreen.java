@@ -19,7 +19,6 @@ public final class ContractBoardScreen extends AbstractContainerScreen<ContractB
         this.imageHeight = 166;
         this.titleLabelX = 10;
         this.titleLabelY = 9;
-        this.inventoryLabel = null;
     }
 
     @Override
