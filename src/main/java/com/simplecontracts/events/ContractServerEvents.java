@@ -20,6 +20,7 @@ import net.neoforged.neoforge.event.entity.player.ItemFishedEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 @EventBusSubscriber(modid = SimpleContracts.MOD_ID)
 public final class ContractServerEvents {
@@ -37,6 +38,23 @@ public final class ContractServerEvents {
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             ContractNetworkSync.sync(player, ContractData.get(player.getServer()));
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerTick(PlayerTickEvent.Post event) {
+        if (event.getEntity() instanceof ServerPlayer player && player.tickCount % 20 == 0) {
+            advanceExploration(player);
+        }
+    }
+
+    private static void advanceExploration(ServerPlayer player) {
+        ContractData data = ContractData.get(player.getServer());
+        if (data.recordExploration(player)) {
+            ContractNetworkSync.sync(player, data);
+            if (player.containerMenu instanceof ContractBoardMenu menu) {
+                menu.refreshFromServer();
+            }
         }
     }
 
