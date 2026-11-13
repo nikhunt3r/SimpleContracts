@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import com.simpleeconomy.api.EconomyAPI;
 
@@ -40,6 +42,7 @@ public final class ContractData extends SavedData {
     );
 
     private final Map<UUID, PlayerContracts> players = new HashMap<>();
+    private final Set<String> exploredLocations = new HashSet<>();
     private long globalRefreshDay = Long.MIN_VALUE;
 
     public static ContractData get(MinecraftServer server) {
@@ -157,6 +160,28 @@ public final class ContractData extends SavedData {
         return advanceProgress(playerId, contractId, amount);
     }
 
+    public boolean recordExploration(ServerPlayer player) {
+        UUID playerId = player.getUUID();
+        boolean hasActiveExplorer = getActiveContracts(playerId).stream()
+                .anyMatch(contract -> contract.id().equals("explorer")
+                        && !contract.claimed()
+                        && contract.progress() < contract.target());
+        if (!hasActiveExplorer) {
+            return false;
+        }
+
+        int chunkX = player.blockPosition().getX() >> 4;
+        int chunkZ = player.blockPosition().getZ() >> 4;
+        String locationKey = player.level().dimension().location()
+                + ":" + chunkX + ":" + chunkZ;
+        if (!exploredLocations.add(playerId + ":" + locationKey)) {
+            return false;
+        }
+
+        setDirty();
+        return advanceProgress(playerId, "explorer", 1);
+    }
+
     private void ensurePlayer(UUID playerId, long refreshDay) {
         PlayerContracts current = players.get(playerId);
         if (current != null && current.refreshDay() >= refreshDay) {
@@ -210,6 +235,11 @@ public final class ContractData extends SavedData {
     ) {
         ContractData data = new ContractData();
         data.globalRefreshDay = tag.getLong("GlobalRefreshDay");
+
+        ListTag exploredTag = tag.getList("ExploredLocations", Tag.TAG_STRING);
+        for (int i = 0; i < exploredTag.size(); i++) {
+            data.exploredLocations.add(exploredTag.getString(i));
+        }
 
         CompoundTag playersTag = tag.getCompound("Players");
         for (String key : playersTag.getAllKeys()) {
@@ -279,6 +309,11 @@ public final class ContractData extends SavedData {
         }
 
         tag.put("Players", playersTag);
+        ListTag exploredTag = new ListTag();
+        for (String location : exploredLocations) {
+            exploredTag.add(net.minecraft.nbt.StringTag.valueOf(location));
+        }
+        tag.put("ExploredLocations", exploredTag);
         return tag;
     }
 
