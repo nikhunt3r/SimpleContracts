@@ -18,7 +18,7 @@ import java.util.UUID;
 
 public final class ContractBoardMenu extends AbstractContainerMenu {
     public static final int CONTRACT_COUNT = 3;
-    private static final int VALUES_PER_CONTRACT = 8;
+    private static final int VALUES_PER_CONTRACT = 7;
     private static final int DATA_COUNT = CONTRACT_COUNT * VALUES_PER_CONTRACT;
 
     private final ContainerLevelAccess access;
@@ -124,7 +124,6 @@ public final class ContractBoardMenu extends AbstractContainerMenu {
             contractData.set(offset + 4, (int) (reward >>> 32));
             contractData.set(offset + 5, contract.claimed() ? 1 : 0);
             contractData.set(offset + 6, contract.accepted() ? 1 : 0);
-            contractData.set(offset + 7, contract.claimed() ? 1 : 0);
         }
     }
 
@@ -146,7 +145,6 @@ public final class ContractBoardMenu extends AbstractContainerMenu {
             data.set(offset + 4, (int) (reward >>> 32));
             data.set(offset + 5, contract.claimed() ? 1 : 0);
             data.set(offset + 6, contract.accepted() ? 1 : 0);
-            data.set(offset + 7, contract.claimed() ? 1 : 0);
         }
         return data;
     }
