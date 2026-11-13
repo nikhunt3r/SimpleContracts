@@ -29,14 +29,15 @@ public final class ContractBoardBlock extends Block {
                     }
 
                     long refreshDay = Math.floorDiv(level.getDayTime(), 24_000L);
+                    ContractData data = ContractData.get(serverPlayer.getServer());
+                    data.getOrCreateContracts(serverPlayer.getUUID(), refreshDay);
                     return new ContractBoardMenu(
                             containerId,
                             playerInventory,
                             ContainerLevelAccess.create(level, pos),
-                            ContractData.get(serverPlayer.getServer()),
+                            data,
                             serverPlayer.getUUID(),
-                            ContractData.get(serverPlayer.getServer())
-                                    .getOrCreateContracts(serverPlayer.getUUID(), refreshDay)
+                            data.getContracts(serverPlayer.getUUID(), 1)
                     );
                 },
                 Component.translatable("screen.simplecontracts.contract_board")
