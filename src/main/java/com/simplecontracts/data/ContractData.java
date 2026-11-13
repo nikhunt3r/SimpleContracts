@@ -54,14 +54,23 @@ public final class ContractData extends SavedData {
      * every online player. Offline players are refreshed when they next join.
      */
     public void refreshOnlinePlayers(long overworldDay, Collection<ServerPlayer> onlinePlayers) {
+        for (ServerPlayer player : onlinePlayers) {
+            getOrCreateContracts(player.getUUID(), overworldDay);
+        }
+    }
+
+    /**
+     * Returns this player's contracts, generating them when the shared server
+     * refresh day has advanced or when this player joins for the first time.
+     */
+    public List<ContractEntry> getOrCreateContracts(UUID playerId, long overworldDay) {
         if (overworldDay > this.globalRefreshDay) {
             this.globalRefreshDay = overworldDay;
             setDirty();
         }
 
-        for (ServerPlayer player : onlinePlayers) {
-            ensurePlayer(player.getUUID(), this.globalRefreshDay);
-        }
+        ensurePlayer(playerId, this.globalRefreshDay);
+        return getContracts(playerId);
     }
 
     public List<ContractEntry> getContracts(UUID playerId) {
