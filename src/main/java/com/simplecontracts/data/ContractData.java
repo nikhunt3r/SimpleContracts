@@ -17,10 +17,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
-/**
- * Server-owned contract state. Each player's generated list is stored separately,
- * while all players use the same overworld day as the refresh boundary.
- */
 public final class ContractData extends SavedData {
     private static final String DATA_NAME = "simplecontracts_contracts";
 
@@ -49,20 +45,12 @@ public final class ContractData extends SavedData {
         return server.overworld().getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
     }
 
-    /**
-     * Advances the shared refresh cycle and generates a different list for
-     * every online player. Offline players are refreshed when they next join.
-     */
     public void refreshOnlinePlayers(long overworldDay, Collection<ServerPlayer> onlinePlayers) {
         for (ServerPlayer player : onlinePlayers) {
             getOrCreateContracts(player.getUUID(), overworldDay);
         }
     }
 
-    /**
-     * Returns this player's contracts, generating them when the shared server
-     * refresh day has advanced or when this player joins for the first time.
-     */
     public List<ContractEntry> getOrCreateContracts(UUID playerId, long overworldDay) {
         if (overworldDay > this.globalRefreshDay) {
             this.globalRefreshDay = overworldDay;
@@ -75,12 +63,77 @@ public final class ContractData extends SavedData {
 
     public List<ContractEntry> getContracts(UUID playerId) {
         PlayerContracts data = players.get(playerId);
-        return data == null ? List.of() : List.copyOf(data.contracts);
+        return data == null ? List.of() : List.copyOf(data.contracts());
+    }
+
+    public List<ContractEntry> getActiveContracts(UUID playerId) {
+        return getContracts(playerId).stream()
+                .filter(ContractEntry::accepted)
+                .toList();
+    }
+
+    /**
+     * Accepts one of the player's currently offered contracts.
+     * The contract is not eligible for progress before this server-side action.
+     */
+    public boolean acceptContract(UUID playerId, int contractIndex) {
+        PlayerContracts current = players.get(playerId);
+        if (current == null || contractIndex < 0 || contractIndex >= current.contracts().size()) {
+            return false;
+        }
+
+        List<ContractEntry> updated = new ArrayList<>(current.contracts());
+        ContractEntry contract = updated.get(contractIndex);
+        if (contract.accepted() || contract.claimed()) {
+            return false;
+        }
+
+        updated.set(contractIndex, contract.withAccepted(true));
+        players.put(playerId, new PlayerContracts(current.refreshDay(), updated));
+        setDirty();
+        return true;
+    }
+
+    /**
+     * Advances progress only for accepted, unfinished contracts with the given id.
+     */
+    public boolean advanceProgress(UUID playerId, String contractId, int amount) {
+        if (amount <= 0) {
+            return false;
+        }
+
+        PlayerContracts current = players.get(playerId);
+        if (current == null) {
+            return false;
+        }
+
+        List<ContractEntry> updated = new ArrayList<>(current.contracts());
+        boolean changed = false;
+
+        for (int i = 0; i < updated.size(); i++) {
+            ContractEntry contract = updated.get(i);
+            if (contract.id().equals(contractId)
+                    && contract.accepted()
+                    && !contract.claimed()
+                    && contract.progress() < contract.target()) {
+                int nextProgress = Math.min(contract.target(), contract.progress() + amount);
+                updated.set(i, contract.withProgress(nextProgress));
+                changed = true;
+                break;
+            }
+        }
+
+        if (changed) {
+            players.put(playerId, new PlayerContracts(current.refreshDay(), updated));
+            setDirty();
+        }
+
+        return changed;
     }
 
     private void ensurePlayer(UUID playerId, long refreshDay) {
         PlayerContracts current = players.get(playerId);
-        if (current != null && current.refreshDay >= refreshDay) {
+        if (current != null && current.refreshDay() >= refreshDay) {
             return;
         }
 
@@ -98,7 +151,10 @@ public final class ContractData extends SavedData {
                     template.title(),
                     template.description(),
                     template.target(),
-                    template.reward()
+                    template.reward(),
+                    0,
+                    false,
+                    false
             ));
         }
 
@@ -109,7 +165,10 @@ public final class ContractData extends SavedData {
     private ContractData() {
     }
 
-    private static ContractData load(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+    private static ContractData load(
+            CompoundTag tag,
+            net.minecraft.core.HolderLookup.Provider registries
+    ) {
         ContractData data = new ContractData();
         data.globalRefreshDay = tag.getLong("GlobalRefreshDay");
 
@@ -131,7 +190,8 @@ public final class ContractData extends SavedData {
                             contractTag.getInt("Target"),
                             contractTag.getLong("Reward"),
                             contractTag.getInt("Progress"),
-                            contractTag.getBoolean("Claimed")
+                            contractTag.getBoolean("Claimed"),
+                            contractTag.getBoolean("Accepted")
                     ));
                 }
 
@@ -151,10 +211,10 @@ public final class ContractData extends SavedData {
 
         for (Map.Entry<UUID, PlayerContracts> playerEntry : players.entrySet()) {
             CompoundTag playerTag = new CompoundTag();
-            playerTag.putLong("RefreshDay", playerEntry.getValue().refreshDay);
+            playerTag.putLong("RefreshDay", playerEntry.getValue().refreshDay());
             ListTag contractList = new ListTag();
 
-            for (ContractEntry contract : playerEntry.getValue().contracts) {
+            for (ContractEntry contract : playerEntry.getValue().contracts()) {
                 CompoundTag contractTag = new CompoundTag();
                 contractTag.putString("Id", contract.id());
                 contractTag.putString("Title", contract.title());
@@ -163,6 +223,7 @@ public final class ContractData extends SavedData {
                 contractTag.putLong("Reward", contract.reward());
                 contractTag.putInt("Progress", contract.progress());
                 contractTag.putBoolean("Claimed", contract.claimed());
+                contractTag.putBoolean("Accepted", contract.accepted());
                 contractList.add(contractTag);
             }
 
@@ -193,10 +254,15 @@ public final class ContractData extends SavedData {
             int target,
             long reward,
             int progress,
-            boolean claimed
+            boolean claimed,
+            boolean accepted
     ) {
-        public ContractEntry(String id, String title, String description, int target, long reward) {
-            this(id, title, description, target, reward, 0, false);
+        public ContractEntry withAccepted(boolean value) {
+            return new ContractEntry(id, title, description, target, reward, progress, claimed, value);
+        }
+
+        public ContractEntry withProgress(int value) {
+            return new ContractEntry(id, title, description, target, reward, value, claimed, accepted);
         }
     }
 }
