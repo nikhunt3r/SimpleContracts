@@ -5,7 +5,6 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.DataPackConfig;
 import net.minecraft.world.level.saveddata.DataFixTypes;
 import net.minecraft.world.level.saveddata.SavedData;
 
