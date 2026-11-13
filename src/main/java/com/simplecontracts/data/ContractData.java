@@ -38,7 +38,13 @@ public final class ContractData extends SavedData {
             new ContractTemplate("fisher", "Рыбак",
                     "Поймайте рыбу", 5, 130),
             new ContractTemplate("explorer", "Исследователь",
-                    "Посетите новые места", 4, 150)
+                    "Посетите новые места", 4, 150),
+            new ContractTemplate("spider_hunter", "Охотник на пауков",
+                    "Убейте пауков", 8, 120),
+            new ContractTemplate("woodcutter", "Лесоруб",
+                    "Срубите брёвна", 32, 110),
+            new ContractTemplate("stone_miner", "Каменщик",
+                    "Добудьте камень", 32, 100)
     );
 
     private final Map<UUID, PlayerContracts> players = new HashMap<>();

@@ -12,7 +12,8 @@ public final class ContractBoardScreen extends AbstractContainerScreen<ContractB
 
     private static final String[] CONTRACT_KEYS = {
             "zombie_hunter", "skeleton_hunter", "iron_miner",
-            "wheat_farmer", "fisher", "explorer"
+            "wheat_farmer", "fisher", "explorer",
+            "spider_hunter", "woodcutter", "stone_miner"
     };
 
     public ContractBoardScreen(ContractBoardMenu menu, Inventory playerInventory, Component title) {

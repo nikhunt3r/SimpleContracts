@@ -69,6 +69,7 @@ public final class ContractServerEvents {
         String contractId = switch (entityId) {
             case "minecraft:zombie" -> "zombie_hunter";
             case "minecraft:skeleton" -> "skeleton_hunter";
+            case "minecraft:spider" -> "spider_hunter";
             default -> null;
         };
 
@@ -85,6 +86,16 @@ public final class ContractServerEvents {
 
         if (event.getState().is(BlockTags.IRON_ORES)) {
             advance(player, "iron_miner", 1);
+            return;
+        }
+
+        if (event.getState().is(BlockTags.LOGS)) {
+            advance(player, "woodcutter", 1);
+            return;
+        }
+
+        if (event.getState().is(BlockTags.BASE_STONE_OVERWORLD)) {
+            advance(player, "stone_miner", 1);
             return;
         }
 

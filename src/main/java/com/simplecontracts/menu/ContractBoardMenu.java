@@ -157,6 +157,9 @@ public final class ContractBoardMenu extends AbstractContainerMenu {
             case "wheat_farmer" -> 3;
             case "fisher" -> 4;
             case "explorer" -> 5;
+            case "spider_hunter" -> 6;
+            case "woodcutter" -> 7;
+            case "stone_miner" -> 8;
             default -> -1;
         };
     }
