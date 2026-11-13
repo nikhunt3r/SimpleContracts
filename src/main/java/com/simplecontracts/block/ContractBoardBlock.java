@@ -1,5 +1,6 @@
 package com.simplecontracts.block;
 
+import com.simplecontracts.data.ContractData;
 import com.simplecontracts.menu.ContractBoardMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -22,12 +23,20 @@ public final class ContractBoardBlock extends Block {
     @Override
     public MenuProvider getMenuProvider(BlockState state, Level level, BlockPos pos) {
         return new SimpleMenuProvider(
-                (containerId, playerInventory, player) ->
-                        new ContractBoardMenu(
-                                containerId,
-                                playerInventory,
-                                ContainerLevelAccess.create(level, pos)
-                        ),
+                (containerId, playerInventory, player) -> {
+                    if (!(player instanceof ServerPlayer serverPlayer)) {
+                        throw new IllegalStateException("Contract board menu must be created on the server");
+                    }
+
+                    long refreshDay = Math.floorDiv(level.getDayTime(), 24_000L);
+                    return new ContractBoardMenu(
+                            containerId,
+                            playerInventory,
+                            ContainerLevelAccess.create(level, pos),
+                            ContractData.get(serverPlayer.getServer())
+                                    .getOrCreateContracts(serverPlayer.getUUID(), refreshDay)
+                    );
+                },
                 Component.translatable("screen.simplecontracts.contract_board")
         );
     }
