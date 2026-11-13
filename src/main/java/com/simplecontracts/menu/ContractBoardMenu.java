@@ -1,29 +1,114 @@
 package com.simplecontracts.menu;
 
+import com.simplecontracts.data.ContractData;
 import com.simplecontracts.registry.ModBlocks;
 import com.simplecontracts.registry.ModMenus;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.ContainerLevelAccess;
+import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
 
-public final class ContractBoardMenu extends AbstractContainerMenu {
-    private final ContainerLevelAccess access;
+import java.util.List;
 
-    // Client-side constructor. The server supplies the real block access.
+public final class ContractBoardMenu extends AbstractContainerMenu {
+    public static final int CONTRACT_COUNT = 3;
+    private static final int VALUES_PER_CONTRACT = 5;
+    private static final int DATA_COUNT = CONTRACT_COUNT * VALUES_PER_CONTRACT;
+
+    private final ContainerLevelAccess access;
+    private final ContainerData contractData;
+
+    // Client-side constructor. The server synchronizes the actual contract data.
     public ContractBoardMenu(int containerId, Inventory playerInventory) {
-        this(containerId, playerInventory, ContainerLevelAccess.NULL);
+        this(containerId, playerInventory, ContainerLevelAccess.NULL, new SimpleContainerData(DATA_COUNT));
     }
 
     // Server-side constructor.
     public ContractBoardMenu(
             int containerId,
             Inventory playerInventory,
-            ContainerLevelAccess access
+            ContainerLevelAccess access,
+            List<ContractData.ContractEntry> contracts
+    ) {
+        this(containerId, playerInventory, access, createData(contracts));
+    }
+
+    private ContractBoardMenu(
+            int containerId,
+            Inventory playerInventory,
+            ContainerLevelAccess access,
+            ContainerData contractData
     ) {
         super(ModMenus.CONTRACT_BOARD.get(), containerId);
+        if (contractData.getCount() != DATA_COUNT) {
+            throw new IllegalArgumentException("Contract board requires " + DATA_COUNT + " data values");
+        }
+
         this.access = access;
+        this.contractData = contractData;
+        this.addDataSlots(contractData);
+    }
+
+    public int getContractType(int slot) {
+        return contractData.get(index(slot, 0));
+    }
+
+    public int getContractTarget(int slot) {
+        return contractData.get(index(slot, 1));
+    }
+
+    public int getContractProgress(int slot) {
+        return contractData.get(index(slot, 2));
+    }
+
+    public long getContractReward(int slot) {
+        int offset = index(slot, 3);
+        return Integer.toUnsignedLong(contractData.get(offset))
+                | ((long) contractData.get(offset + 1) << 32);
+    }
+
+    public boolean isContractClaimed(int slot) {
+        return contractData.get(index(slot, 4)) != 0;
+    }
+
+    private static int index(int slot, int valueOffset) {
+        if (slot < 0 || slot >= CONTRACT_COUNT) {
+            throw new IndexOutOfBoundsException("Contract slot: " + slot);
+        }
+        return slot * VALUES_PER_CONTRACT + valueOffset;
+    }
+
+    private static ContainerData createData(List<ContractData.ContractEntry> contracts) {
+        SimpleContainerData data = new SimpleContainerData(DATA_COUNT);
+
+        for (int slot = 0; slot < Math.min(CONTRACT_COUNT, contracts.size()); slot++) {
+            ContractData.ContractEntry contract = contracts.get(slot);
+            int offset = index(slot, 0);
+            data.set(offset, contractTypeIndex(contract.id()));
+            data.set(offset + 1, contract.target());
+            data.set(offset + 2, contract.progress());
+
+            long reward = Math.max(0L, contract.reward());
+            data.set(offset + 3, (int) reward);
+            data.set(offset + 4, (int) (reward >>> 32));
+        }
+
+        return data;
+    }
+
+    private static int contractTypeIndex(String id) {
+        return switch (id) {
+            case "zombie_hunter" -> 0;
+            case "skeleton_hunter" -> 1;
+            case "iron_miner" -> 2;
+            case "wheat_farmer" -> 3;
+            case "fisher" -> 4;
+            case "explorer" -> 5;
+            default -> -1;
+        };
     }
 
     @Override
