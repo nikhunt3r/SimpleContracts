@@ -18,7 +18,7 @@ import java.util.UUID;
 
 public final class ContractBoardMenu extends AbstractContainerMenu {
     public static final int CONTRACT_COUNT = 3;
-    private static final int VALUES_PER_CONTRACT = 7;
+    private static final int VALUES_PER_CONTRACT = 8;
     private static final int DATA_COUNT = CONTRACT_COUNT * VALUES_PER_CONTRACT;
 
     private final ContainerLevelAccess access;
@@ -73,23 +73,31 @@ public final class ContractBoardMenu extends AbstractContainerMenu {
 
     public boolean isContractClaimed(int slot) { return contractData.get(index(slot, 5)) != 0; }
     public boolean isContractAccepted(int slot) { return contractData.get(index(slot, 6)) != 0; }
+    public boolean isContractCompleted(int slot) { return getContractProgress(slot) >= getContractTarget(slot); }
 
     @Override
     public boolean clickMenuButton(Player player, int buttonId) {
         if (serverData == null || playerId == null || !(player instanceof ServerPlayer serverPlayer)) {
             return false;
         }
-        if (buttonId < 0 || buttonId >= CONTRACT_COUNT || !stillValid(player)) {
+        if (!stillValid(player)) {
             return false;
         }
 
-        boolean accepted = serverData.acceptContract(playerId, buttonId);
-        if (!accepted) {
+        boolean changed;
+        if (buttonId >= 0 && buttonId < CONTRACT_COUNT) {
+            changed = serverData.acceptContract(playerId, buttonId);
+        } else if (buttonId >= 10 && buttonId < 10 + CONTRACT_COUNT) {
+            changed = serverData.claimReward(serverPlayer, buttonId - 10);
+        } else {
             return false;
         }
 
-        List<ContractData.ContractEntry> updated = serverData.getContracts(playerId);
-        writeData(updated);
+        if (!changed) {
+            return false;
+        }
+
+        writeData(serverData.getContracts(playerId));
         ContractNetworkSync.sync(serverPlayer, serverData);
         return true;
     }
@@ -116,6 +124,7 @@ public final class ContractBoardMenu extends AbstractContainerMenu {
             contractData.set(offset + 4, (int) (reward >>> 32));
             contractData.set(offset + 5, contract.claimed() ? 1 : 0);
             contractData.set(offset + 6, contract.accepted() ? 1 : 0);
+            contractData.set(offset + 7, contract.claimed() ? 1 : 0);
         }
     }
 
@@ -137,6 +146,7 @@ public final class ContractBoardMenu extends AbstractContainerMenu {
             data.set(offset + 4, (int) (reward >>> 32));
             data.set(offset + 5, contract.claimed() ? 1 : 0);
             data.set(offset + 6, contract.accepted() ? 1 : 0);
+            data.set(offset + 7, contract.claimed() ? 1 : 0);
         }
         return data;
     }
