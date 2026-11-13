@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "simplecontracts:block/contract_board"
+    }
+  }
+}

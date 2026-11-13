@@ -1,0 +1,6 @@
+{
+  "block.simplecontracts.contract_board": "Contract Board",
+  "screen.simplecontracts.contract_board": "Contract Board",
+  "screen.simplecontracts.contract_board.empty": "No contracts available yet",
+  "screen.simplecontracts.contract_board.hint": "Available contracts will appear here after the board refreshes."
+}

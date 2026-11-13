@@ -1,6 +1,7 @@
 package com.simplecontracts.registry;
 
 import com.simplecontracts.SimpleContracts;
+import com.simplecontracts.block.ContractBoardBlock;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -12,8 +13,10 @@ public final class ModBlocks {
             DeferredRegister.create(Registries.BLOCK, SimpleContracts.MOD_ID);
 
     public static final DeferredHolder<Block, Block> CONTRACT_BOARD =
-            BLOCKS.register("contract_board",
-                    () -> new Block(BlockBehaviour.Properties.of().strength(2.5F)));
+            BLOCKS.register(
+                    "contract_board",
+                    () -> new ContractBoardBlock(BlockBehaviour.Properties.of().strength(2.5F))
+            );
 
     private ModBlocks() {
     }

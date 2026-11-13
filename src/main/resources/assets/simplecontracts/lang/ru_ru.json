@@ -1,0 +1,6 @@
+{
+  "block.simplecontracts.contract_board": "Доска контрактов",
+  "screen.simplecontracts.contract_board": "Доска контрактов",
+  "screen.simplecontracts.contract_board.empty": "Пока нет доступных заданий",
+  "screen.simplecontracts.contract_board.hint": "Задания появятся здесь после обновления доски."
+}
