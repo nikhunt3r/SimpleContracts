@@ -74,7 +74,16 @@ public final class ContractBoardScreen extends AbstractContainerScreen<ContractB
             int mouseX,
             int mouseY
     ) {
-        super.renderLabels(graphics, mouseX, mouseY);
+        // Draw only the board title. AbstractContainerScreen's default labels
+        // also draw the inventory caption, which this screen does not use.
+        graphics.drawString(
+                this.font,
+                Component.translatable("screen.simplecontracts.contract_board"),
+                10,
+                12,
+                0x404040,
+                false
+        );
 
         Component emptyMessage =
                 Component.translatable("screen.simplecontracts.contract_board.empty");
