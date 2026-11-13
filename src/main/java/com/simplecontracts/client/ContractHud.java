@@ -30,7 +30,8 @@ public final class ContractHud {
         int x = 8;
         int y = 8;
         int width = 150;
-        int rowHeight = 28;
+        int availableHeight = Math.max(14, minecraft.getWindow().getGuiScaledHeight() - y - 14);
+        int rowHeight = Math.max(14, Math.min(28, availableHeight / contracts.size()));
         int height = 8 + contracts.size() * rowHeight;
 
         graphics.fill(x, y, x + width, y + height, 0xA0000000);
@@ -57,12 +58,12 @@ public final class ContractHud {
                     rowY, 0xFFFFFF, false);
 
             int barX = x + 6;
-            int barY = rowY + 10;
+            int barY = rowY + Math.max(9, rowHeight - 8);
             int barWidth = width - 12;
-            graphics.fill(barX, barY, barX + barWidth, barY + 4, 0xFF444444);
+            graphics.fill(barX, barY, barX + barWidth, barY + 3, 0xFF444444);
             int filled = contract.target() <= 0 ? 0
                     : barWidth * Math.min(contract.progress(), contract.target()) / contract.target();
-            graphics.fill(barX, barY, barX + filled, barY + 4, 0xFF55AA55);
+            graphics.fill(barX, barY, barX + filled, barY + 3, 0xFF55AA55);
             rowY += rowHeight;
         }
     }
