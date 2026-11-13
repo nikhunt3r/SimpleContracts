@@ -33,7 +33,10 @@ public final class ContractBoardScreen extends AbstractContainerScreen<ContractB
                     Button.builder(
                                     Component.translatable("screen.simplecontracts.contract_board.accept"),
                                     button -> this.minecraft.gameMode.handleInventoryButtonClick(
-                                            this.menu.containerId, contractIndex
+                                            this.menu.containerId,
+                                            this.menu.isContractAccepted(contractIndex)
+                                                    && this.menu.isContractCompleted(contractIndex)
+                                                    ? 10 + contractIndex : contractIndex
                                     )
                             )
                             .bounds(
@@ -69,11 +72,18 @@ public final class ContractBoardScreen extends AbstractContainerScreen<ContractB
             }
 
             boolean accepted = this.menu.isContractAccepted(slot);
-            button.active = !accepted && this.menu.getContractType(slot) >= 0;
-            button.setMessage(Component.translatable(
-                    accepted ? "screen.simplecontracts.contract_board.accepted"
-                            : "screen.simplecontracts.contract_board.accept"
-            ));
+            boolean claimed = this.menu.isContractClaimed(slot);
+            boolean completed = this.menu.isContractCompleted(slot);
+            button.active = this.menu.getContractType(slot) >= 0
+                    && (!accepted || (completed && !claimed));
+            String label = !accepted
+                    ? "screen.simplecontracts.contract_board.accept"
+                    : claimed
+                    ? "screen.simplecontracts.contract_board.claimed"
+                    : completed
+                    ? "screen.simplecontracts.contract_board.claim"
+                    : "screen.simplecontracts.contract_board.accepted";
+            button.setMessage(Component.translatable(label));
         }
     }
 
