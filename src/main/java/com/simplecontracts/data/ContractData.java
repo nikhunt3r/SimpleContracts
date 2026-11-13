@@ -230,7 +230,8 @@ public final class ContractData extends SavedData {
             int missing = CONTRACTS_PER_LEVEL - countLevel(generated, level);
             if (missing <= 0) continue;
             List<ContractTemplate> choices = new ArrayList<>(templates(level));
-            choices.removeIf(t -> previousOffers.contains(level + ":" + t.id()));
+            int currentLevel = level;
+            choices.removeIf(t -> previousOffers.contains(currentLevel + ":" + t.id()));
             long seed = id.getMostSignificantBits() ^ id.getLeastSignificantBits()
                     ^ (day * 0x9E3779B97F4A7C15L)
                     ^ (version * 0xD1B54A32D192ED03L)
