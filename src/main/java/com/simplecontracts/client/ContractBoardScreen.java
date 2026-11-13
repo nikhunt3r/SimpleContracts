@@ -19,6 +19,7 @@ public final class ContractBoardScreen extends AbstractContainerScreen<ContractB
         this.imageHeight = 166;
         this.titleLabelX = 10;
         this.titleLabelY = 9;
+        this.inventoryLabel = null;
     }
 
     @Override
@@ -74,14 +75,7 @@ public final class ContractBoardScreen extends AbstractContainerScreen<ContractB
             int mouseX,
             int mouseY
     ) {
-        graphics.drawString(
-                this.font,
-                Component.translatable("screen.simplecontracts.contract_board"),
-                10,
-                12,
-                0x404040,
-                false
-        );
+        super.renderLabels(graphics, mouseX, mouseY);
 
         Component emptyMessage =
                 Component.translatable("screen.simplecontracts.contract_board.empty");
