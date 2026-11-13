@@ -105,7 +105,7 @@ public final class ContractBoardScreen extends AbstractContainerScreen<ContractB
                 Component.translatable("screen.simplecontracts.contract_board.level_name." + menu.getSelectedLevel()));
         g.drawCenteredString(font, page, imageWidth / 2, 34, 0x202020);
         Component reputation = Component.translatable("screen.simplecontracts.contract_board.reputation",
-                menu.getReputation(), menu.getPlayerLevel(), menu.getActiveCount(), ContractDataLimit.MAX_ACTIVE);
+                menu.getReputation(), menu.getPlayerLevel(), menu.getActiveCount(), menu.getMaxActiveContracts());
         g.drawString(font, reputation, 36, 48, 0x303030, false);
 
         for (int slot = 0; slot < ContractBoardMenu.CONTRACT_COUNT; slot++) {
@@ -123,7 +123,4 @@ public final class ContractBoardScreen extends AbstractContainerScreen<ContractB
         }
     }
 
-    private static final class ContractDataLimit {
-        private static final int MAX_ACTIVE = 3;
-    }
 }
