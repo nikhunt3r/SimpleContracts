@@ -33,6 +33,8 @@ public final class ContractBoardBlock extends Block {
                             containerId,
                             playerInventory,
                             ContainerLevelAccess.create(level, pos),
+                            ContractData.get(serverPlayer.getServer()),
+                            serverPlayer.getUUID(),
                             ContractData.get(serverPlayer.getServer())
                                     .getOrCreateContracts(serverPlayer.getUUID(), refreshDay)
                     );
