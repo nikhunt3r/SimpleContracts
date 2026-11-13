@@ -1,5 +1,6 @@
 package com.simplecontracts.menu;
 
+import com.simplecontracts.config.SimpleContractsConfig;
 import com.simplecontracts.data.ContractData;
 import com.simplecontracts.network.ContractNetworkSync;
 import com.simplecontracts.registry.ModBlocks;
@@ -65,6 +66,7 @@ public final class ContractBoardMenu extends AbstractContainerMenu {
     public int getReputation() { return data.get(META_OFFSET + 1); }
     public int getPlayerLevel() { return data.get(META_OFFSET + 2); }
     public int getActiveCount() { return data.get(META_OFFSET + 3); }
+    public int getMaxActiveContracts() { return SimpleContractsConfig.getMaxActiveContracts(); }
 
     @Override
     public boolean clickMenuButton(Player player, int buttonId) {
