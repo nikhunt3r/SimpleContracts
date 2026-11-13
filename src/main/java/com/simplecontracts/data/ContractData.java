@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
-import java.util.function.BiFunction;
 import com.simpleeconomy.api.EconomyAPI;
 
 public final class ContractData extends SavedData {
@@ -192,7 +191,8 @@ public final class ContractData extends SavedData {
                         template.reward(),
                         0,
                         false,
-                        false
+                        false,
+                        UUID.randomUUID().toString()
                 ));
             }
         }
