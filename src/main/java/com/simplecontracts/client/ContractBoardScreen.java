@@ -70,7 +70,8 @@ public final class ContractBoardScreen extends AbstractContainerScreen<ContractB
             boolean accepted = menu.isContractAccepted(slot);
             boolean claimed = menu.isContractClaimed(slot);
             boolean completed = menu.isContractCompleted(slot);
-            button.active = exists && (!accepted || (completed && !claimed));
+            boolean canAccept = menu.getActiveCount() < menu.getMaxActiveContracts();
+            button.active = exists && ((!accepted && canAccept) || (accepted && completed && !claimed));
             String label = !accepted ? "screen.simplecontracts.contract_board.accept"
                     : claimed ? "screen.simplecontracts.contract_board.claimed"
                     : completed ? "screen.simplecontracts.contract_board.claim"
