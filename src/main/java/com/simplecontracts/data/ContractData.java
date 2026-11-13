@@ -188,11 +188,12 @@ public final class ContractData extends SavedData {
             return;
         }
 
-        // Accepted contracts survive the daily board refresh. Only unaccepted offers rotate.
+        // Keep accepted contracts while they are active or awaiting reward collection.
+        // Claimed contracts are removed at the next shared daily refresh.
         List<ContractEntry> generated = new ArrayList<>();
         if (current != null) {
             current.contracts().stream()
-                    .filter(ContractEntry::accepted)
+                    .filter(contract -> contract.accepted() && !contract.claimed())
                     .forEach(generated::add);
         }
 
